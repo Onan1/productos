@@ -1,0 +1,49 @@
+﻿@model List<OP.SysProductos.EN.Producto>
+
+<h2>Lista de Productos</h2>
+
+<a asp-action="ReporteProductos" class="btn btn-dark">Generar Reporte</a>
+<a asp-action="Crear" class="btn btn-primary">Agregar Producto</a>
+<a asp-action="ReporteProductosExcel" class="btn btn-dark">Generar Excel</a>
+
+<br/>
+<br />
+
+<div class="card">
+    <form asp-action="SubirExcelProductos" asp-controller="Producto" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="archivoExel">Subir Excel</label>
+        <input type="file" name="archivoExel" required/>
+    </div>    
+    <button type="submit" class="btn btn-primary">Subir y Guardar</button>
+    </form>
+</div>
+
+
+<table class="table table-bordered mt-3">
+    <thead class="table-dark">
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Cantidad</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Nombre</td>
+                <td>@item.Precio</td>
+                <td>@item.CantidadDisponible</td>
+                <td>@item.FechaCreacion</td>
+                <td>
+                    <a asp-action="Editar" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Editar</a>
+                    <a asp-action="Eliminar" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

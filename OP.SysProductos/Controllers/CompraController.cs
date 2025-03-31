@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using OfficeOpenXml;
 using OP.SysProductos.BL;
 using OP.SysProductos.EN;
+using OP.SysProductos.EN.Filtros;
+using Rotativa.AspNetCore;
 using static OP.SysProductos.EN.Compra;
+using static OP.SysProductos.EN.Filtros.CompraFiltros;
 
 namespace OP.SysProductos.Controllers
 {
@@ -125,6 +129,83 @@ namespace OP.SysProductos.Controllers
             await compraBL.AnularAsync(id);
 
             return RedirectToAction("Index");
+        }
+        public async Task<IActionResult> ReporteComprasExcel(List<Compra> compras)
+        {
+            using (var package = new ExcelPackage())
+            {
+                var hojaExcel = package.Workbook.Worksheets.Add("Reporte Compras");
+
+                // Encabezados
+                hojaExcel.Cells["A1"].Value = "Fecha de Compra";
+                hojaExcel.Cells["B1"].Value = "Cliente";
+                hojaExcel.Cells["C1"].Value = "Producto";
+                hojaExcel.Cells["D1"].Value = "Cantidad";
+                hojaExcel.Cells["E1"].Value = "Subtotal";
+                hojaExcel.Cells["F1"].Value = "Total de la Compra";
+
+                int row = 2;
+                int totalCantidad = 0;
+                decimal totalSubTotal = 0;
+                decimal totalGeneral = 0;
+
+                foreach (var compra in compras)
+                {
+                    foreach (var detalle in compra.DetalleCompras)
+                    {
+                        hojaExcel.Cells[row, 1].Value = compra.FechaCompra.ToString("yyyy-MM-dd");
+                        hojaExcel.Cells[row, 2].Value = compra.Proveedor?.Nombre ?? "N/A";
+                        hojaExcel.Cells[row, 3].Value = detalle.Producto?.Nombre ?? "N/A";
+                        hojaExcel.Cells[row, 4].Value = detalle.Cantidad;
+                        hojaExcel.Cells[row, 5].Value = detalle.SubTotal;
+                        hojaExcel.Cells[row, 6].Value = compra.Total;
+
+                        // Acumular totales
+                        totalCantidad += detalle.Cantidad;
+                        totalSubTotal += detalle.SubTotal;
+                        totalGeneral += compra.Total;
+
+                        row++;
+                    }
+                }
+
+                // Fila de totales
+                hojaExcel.Cells[row, 3].Value ="Totales:";
+                hojaExcel.Cells[row, 4].Value =totalCantidad;
+                hojaExcel.Cells[row, 5].Value =totalSubTotal;
+                hojaExcel.Cells[row, 6].Value =totalGeneral;
+
+                //Negrita para la fila de totales
+                hojaExcel.Cells[row, 3, row, 6].Style.Font.Bold = true;
+
+                hojaExcel.Cells["A:F"].AutoFitColumns();
+
+                var stream = new MemoryStream();
+                package.SaveAs(stream);
+                stream.Position = 0;
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ReproteComprasExcel.xlsx");
+
+            }
+        }
+        [HttpGet]
+        public async Task<IActionResult> DescargarReporte(CompraFiltros filtro)
+        {
+            var compras = await compraBL.ObtenerReporteComprasAsync(filtro);
+            if (filtro.TipoReporte == (byte)EnumTipoReporte.PDF)
+            {
+                return new ViewAsPdf("rpCompras", compras);
+            }
+            else if (filtro.TipoReporte == (byte)EnumTipoReporte.Excel)
+            {
+                return await ReporteComprasExcel(compras);
+            }
+
+            return BadRequest("Formato no valido");
+        }
+        [HttpGet]
+        public IActionResult ReporteCompras()
+        {
+            return View();
         }
     }
 }

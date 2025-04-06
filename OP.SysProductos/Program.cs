@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using OP.SysProductos.DAL;
 using OP.SysProductos.BL;
 using OfficeOpenXml;
+using OP.SysProductos.EN;
+using OP.SysProductos.DAL.Implementaciones;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,15 @@ builder.Services.AddScoped<ProveedorBL>();
 
 builder.Services.AddScoped<CompraDAL>();
 builder.Services.AddScoped<CompraBL>();
+
+builder.Services.AddScoped<VentaBL>();
+builder.Services.AddScoped<VentaDAL>();
+builder.Services.AddScoped<DetalleVenta>();
+
+builder.Services.AddScoped<ClienteDAL>();
+builder.Services.AddScoped<ClienteBL>();
+
+
 
 builder.Services.AddControllersWithViews();
 ExcelPackage.LicenseContext = LicenseContext.Commercial;

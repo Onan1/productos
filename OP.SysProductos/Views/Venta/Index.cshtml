@@ -1,0 +1,48 @@
+﻿@model List<OP.SysProductos.EN.Venta>
+
+<form method="get" class="form-inline">
+    <div class="form-group">
+        <label for="estado">Estado:</label>
+        @Html.DropDownList("estado", (SelectList)ViewBag.Estados, new { @class = "form-control" })
+    </div>
+</form>
+<div class="mb-3">
+    <form asp-action="DescargarReporte" method="get" class="form-inline">
+        <input type="hidden" name="FechaInicio" value="@DateTime.Today.AddMonths(-1).ToString("yyyy-MM-dd")" />
+        <input type="hidden" name="FechaFin" value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+
+        <button type="submit" name="TipoReporte" value="1" class="btn btn-success">
+            <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+        </button>
+        <button type="submit" name="TipoReporte" value="2" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Descargar Excel
+        </button>
+    </form>
+</div>
+
+<div>
+    <a href="@Url.Action("Create", "Venta")" class="btn btn-success">Crear Venta</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var venta in Model)
+        {
+            <tr>
+                <td>@venta.Cliente.Nombre</td>
+                <td>@venta.FechaVenta.ToShortDateString()</td>
+                <td>@venta.Total</td>
+                <td>@(venta.Estado == 1 ? "Activa" : "Anulada")</td>
+            </tr>
+        }
+    </tbody>
+</table>

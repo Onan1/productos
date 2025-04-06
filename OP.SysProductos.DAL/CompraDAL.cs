@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OP.SysProductos.EN;
+using OP.SysProductos.EN.Filtros;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,6 +91,26 @@ namespace OP.SysProductos.DAL
             var compras = await comprasQuery.ToListAsync();
 
             return compras ?? new List<Compra>();
+        }
+        public async Task<List<Compra>> ObtenerReporteComprasAsync(CompraFiltros filtro)
+        {
+            var comprasQuery = DbContext.Compras
+                .Include(c => c.DetalleCompras)
+                .ThenInclude(dc => dc.Producto )
+                .Include(c => c.Proveedor)
+                .AsQueryable();
+            if (filtro.FechaInicio.HasValue)
+            {
+                DateTime fechaInici = filtro.FechaInicio.Value.Date;
+                comprasQuery = comprasQuery.Where(c => c.FechaCompra >= fechaInici);
+            }
+
+            if (filtro.FechaFin.HasValue)
+            {
+                DateTime fechaFin = filtro.FechaFin.Value.Date.AddDays(1).AddSeconds(-1);
+                comprasQuery = comprasQuery.Where(c => c.FechaCompra <= fechaFin);
+            }
+            return await comprasQuery.ToListAsync();
         }
     }
 }
